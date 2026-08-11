@@ -9,8 +9,15 @@ echo "Authenticating ngrok..."
 ngrok config add-authtoken "$NGROK_AUTHTOKEN"
 
 echo "Starting ngrok TCP tunnel on port 22..."
-# Paid plan allows TCP tunnels + static domains
-ngrok tcp 22 --region in &
+
+# If reserved TCP address is set, use it for static IP
+if [ -n "$NGROK_TCP_ADDR" ]; then
+    echo "Using reserved TCP address: $NGROK_TCP_ADDR"
+    ngrok tcp 22 --region in --remote-addr "$NGROK_TCP_ADDR" &
+else
+    echo "No reserved address set — ngrok will assign dynamic (upgrade to static in dashboard)"
+    ngrok tcp 22 --region in &
+fi
 
 # Keep container alive
 tail -f /dev/null
